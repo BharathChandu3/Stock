@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Features | Stock Prediction App</title>
+
+  <!-- Swiper CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #000, #003333);
+      color: #00ffcc;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 70px;
+      background: rgba(0, 255, 204, 0.05);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 40px;
+      z-index: 100;
+      border-bottom: 1px solid #00ffcc33;
+    }
+
+    .nav-logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #00ffcc;
+      text-shadow: 0 0 10px #00ffcc;
+      user-select: none;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 30px;
+    }
+
+    .nav-links li a {
+      text-decoration: none;
+      font-size: 1.1rem;
+      color: #00ffcc;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .nav-links li a::after {
+      content: '';
+      position: absolute;
+      width: 0%;
+      height: 2px;
+      bottom: -5px;
+      left: 0;
+      background-color: #00ffcc;
+      transition: width 0.3s ease;
+    }
+
+    .nav-links li a:hover {
+      color: #ffffff;
+    }
+
+    .nav-links li a:hover::after {
+      width: 100%;
+    }
+
+    .content {
+      margin-top: 120px;
+      padding: 2rem;
+      max-width: 1000px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      text-shadow: 0 0 10px #00ffccaa;
+    }
+
+    .swiper-container {
+      width: 100%;
+      max-width: 900px;
+      margin: 3rem auto;
+      position: relative;
+    }
+
+    .swiper-slide {
+      background: rgba(0, 255, 204, 0.05);
+      border: 1px solid #00ffcc33;
+      border-radius: 20px;
+      text-align: center;
+      padding: 1rem;
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+      color: #00ffcc;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+      transform-style: preserve-3d;
+      perspective: 1000px;
+    }
+
+    .swiper-slide:hover {
+      transform: rotateY(8deg) scale(1.05);
+      box-shadow: 0 0 40px rgba(0, 255, 204, 0.5);
+    }
+
+    .swiper-slide img {
+      width: 100%;
+      max-width: 280px;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      box-shadow: 0 0 15px #00ffcc33;
+    }
+
+    /* Glowing border effect */
+    .swiper-slide::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, #00ffcc, #007777, #00ffcc);
+      z-index: -1;
+      border-radius: 20px;
+      filter: blur(10px);
+      opacity: 0.3;
+    }
+
+    /* Floating glowing icons */
+    .glow-icon {
+      position: absolute;
+      width: 25px;
+      height: 25px;
+      background: #00ffcc;
+      border-radius: 50%;
+      opacity: 0.2;
+      animation: float 6s infinite ease-in-out;
+    }
+
+    .glow-icon:nth-child(1) {
+      top: -20px;
+      left: 30%;
+      animation-delay: 0s;
+    }
+
+    .glow-icon:nth-child(2) {
+      bottom: -30px;
+      right: 25%;
+      animation-delay: 2s;
+    }
+
+    .glow-icon:nth-child(3) {
+      top: 50%;
+      left: -20px;
+      animation-delay: 4s;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(0px) scale(1);
+        opacity: 0.2;
+      }
+      50% {
+        transform: translateY(-15px) scale(1.3);
+        opacity: 0.4;
+      }
+      100% {
+        transform: translateY(0px) scale(1);
+        opacity: 0.2;
+      }
+    }
+
+    @media screen and (max-width: 768px) {
+      .swiper-slide {
+        transform: none !important;
+      }
+
+      .glow-icon {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-logo">📈 StockAI</div>
+    <ul class="nav-links"style="margin-right:50%">
+      <li><a href="{{ url_for('home') }}">Home</a></li>
+      <li><a href="{{ url_for('about') }}">About</a></li>
+      <li><a href="{{ url_for('features') }}">Features</a></li>
+      <li><a href="{{ url_for('team') }}">Team</a></li>
+    </ul>
+  </nav>
+
+  <div class="content">
+    <h1>Features</h1>
+
+    <!-- Glowing icons for visual boost -->
+    <div class="glow-icon"></div>
+    <div class="glow-icon"></div>
+    <div class="glow-icon"></div>
+
+    <div class="swiper-container">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide">
+          <img src="../static/Real-Time Stock Predictions.webp" alt="Real-time Predictions" />
+          <p>🔮 Real-Time Predictions</p>
+        </div>
+        <div class="swiper-slide">
+          <img src="../static/Interactive Visualization.jpg" alt="Charts" />
+          <p>📈 Interactive Visualization</p>
+        </div>
+        <div class="swiper-slide">
+          <img src="../static/AIdriven.jpg" alt="AI Accuracy" />
+          <p>🧠 AI-Driven Accuracy</p>
+        </div>
+        <div class="swiper-slide">
+          <img src="../static/access anywhere.webp" alt="Access Anywhere" />
+          <p>🌐 Access Anywhere</p>
+        </div>
+        <div class="swiper-slide">
+          <img src="../static/AI-Powered Sentiment Analysis.avif" alt="Sentiment Analysis" />
+          <p>🗞️ Sentiment Analysis</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Swiper JS -->
+  <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Swiper Init -->
+  <script>
+    const swiper = new Swiper('.swiper-container', {
+      effect: 'coverflow',
+      grabCursor: true,
+      centeredSlides: true,
+      loop: true,
+      slidesPerView: 'auto',
+      coverflowEffect: {
+        rotate: 50,
+        stretch: 0,
+        depth: 120,
+        modifier: 1,
+        slideShadows: true,
+      },
+      autoplay: {
+        delay: 3500,
+        disableOnInteraction: false,
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stock Price Prediction</title>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: black;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.1), transparent 70%);
+    z-index: -3;
+}
+
+
+        .background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px 40px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        h2 {
+            color:white;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 1rem;
+            color:white;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        select, input, button {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        input:focus, button:hover {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #result {
+            margin-top: 20px;
+            color: white;
+            font-size: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        #recommendation {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #007bff;
+            text-align: center;
+        }
+
+        canvas {
+            margin-top: 20px;
+            max-width: 100%;
+        }
+
+        .spinner {
+            display: none;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-top-color: #007bff;
+            animation: spin 1s ease-in-out infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .suggestions {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            max-height: 150px;
+            overflow-y: auto;
+            background-color: #fff;
+            position: absolute;
+            width: calc(100% - 40px);
+            z-index: 1000;
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .explanation {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .explanation h3 {
+            margin-top: 0;
+        }
+
+        .explanation p {
+            margin: 5px 0;
+        }
+
+        .news {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .news h3 {
+            margin-top: 0;
+        }
+
+        .news p {
+            margin: 5px 0;
+        }
+        #particles-js {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    top: 0;
+    left: 0;
+}
+
+    </style>
+</head>
+
+
+<body>
+    
+    <div id="particles-js"></div>
+
+    <div class="background" id="background"></div>
+    
+    <div class="container">
+        <marquee 
+        behavior="scroll" 
+        direction="left" 
+        scrollamount="6"
+        onmouseover="this.stop();" 
+        onmouseout="this.start();"
+        style="display: inline-block; white-space: nowrap; background: linear-gradient(90deg, #111, #1a1a1a); color: #fff; padding: 10px 20px; border: 2px solid #00f7ff; border-radius: 12px; box-shadow: 0 0 15px rgba(0, 247, 255, 0.4); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 1.1em;">
+        This app supports companies like those listed below. Click on the PDF button to view more information.<br> 
+        <button 
+          onclick="window.open('{{ url_for('static', filename='stock_tickers.pdf') }}')" 
+          style="background-color: #00f7ff; color: #000; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; margin-left: 100px; cursor: pointer; transition: all 0.3s ease;"
+          onmouseover="this.style.backgroundColor='#0ff'; this.style.boxShadow='0 0 10px #0ff, 0 0 20px #0ff';" 
+          onmouseout="this.style.backgroundColor='#00f7ff'; this.style.boxShadow='none';">
+          PDF
+        </button>
+      </marquee>
+      
+
+
+       
+        <h2>Stock Market Price Prediction</h2>
+        <form id="predictionForm">
+            <label>Company Ticker Symbol:</label>
+            <input type="text" id="tickerInput" name="company" placeholder="e.g., AAPL" autocomplete="off" required><br>
+
+            <div class="suggestions" id="suggestionsBox"></div>
+            <label>Prediction Period (days):</label>
+            <input type="number" name="period" value="1" min="1"><br>
+            <label>Select Model:</label>
+            <select name="model">
+                <option value="ARIMA">ARIMA</option>
+                <option value="LSTM+GRU">LSTM+GRU</option>
+                <option value="Linear Regression">Linear Regression</option>
+            </select><br>
+            <button type="submit">Predict</button>
+        </form>
+        <div class="spinner" id="spinner"></div>
+        <div id="result"></div>
+        <div id="recommendation"></div>
+        <button id="getRecommendation" style="display:none;">Get Recommendation</button>
+        <div class="explanation" id="explanation">
+            <h3>Recommendation Criteria</h3>
+            <p><strong>Buy:</strong> If the average predicted price is more than 2% higher than today's price.</p>
+            <p><strong>Sell:</strong> If the average predicted price is more than 2% lower than today's price.</p>
+            <p><strong>Hold:</strong> If the average predicted price is within 2% of today's price.</p>
+        </div>
+        <div class="news" id="news">
+            <h3>News Sentiment</h3>
+            <p id="newsSentiment"></p>
+        </div>
+        <button id="showGraph" style="display:none;">Show Graph</button>
+        <canvas id="predictionChart"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const form = document.getElementById('predictionForm');
+        const tickerInput = document.getElementById('tickerInput');
+        const suggestionsBox = document.getElementById('suggestionsBox');
+        const resultDiv = document.getElementById('result');
+        const recommendationDiv = document.getElementById('recommendation');
+        const spinner = document.getElementById('spinner');
+        const showGraphButton = document.getElementById('showGraph');
+        const getRecommendationButton = document.getElementById('getRecommendation');
+        const explanationDiv = document.getElementById('explanation');
+        const newsDiv = document.getElementById('news');
+        const newsSentiment = document.getElementById('newsSentiment');
+        const ctx = document.getElementById('predictionChart').getContext('2d');
+        const background = document.getElementById('background');
+        let predictionData = [];
+        let latestPrice = 0;
+
+        const companies = [
+        
+  { name: 'Apple Inc.', symbol: 'AAPL' },
+  { name: 'Microsoft Corporation', symbol: 'MSFT' },
+  { name: 'Amazon.com, Inc.', symbol: 'AMZN' },
+  { name: 'Alphabet Inc.', symbol: 'GOOGL' },
+  { name: 'Meta Platforms, Inc.', symbol: 'META' },
+  { name: 'Tesla, Inc.', symbol: 'TSLA' },
+  { name: 'NVIDIA Corporation', symbol: 'NVDA' },
+  { name: 'JPMorgan Chase & Co.', symbol: 'JPM' },
+  { name: 'Johnson & Johnson', symbol: 'JNJ' },
+  { name: 'Visa Inc.', symbol: 'V' },
+  { name: 'Procter & Gamble Co.', symbol: 'PG' },
+  { name: 'UnitedHealth Group Incorporated', symbol: 'UNH' },
+  { name: 'Home Depot, Inc.', symbol: 'HD' },
+  { name: 'Mastercard Incorporated', symbol: 'MA' },
+  { name: 'Bank of America Corporation', symbol: 'BAC' },
+  { name: 'Walt Disney Company', symbol: 'DIS' },
+  { name: 'PayPal Holdings, Inc.', symbol: 'PYPL' },
+  { name: 'Netflix, Inc.', symbol: 'NFLX' },
+  { name: 'Adobe Inc.', symbol: 'ADBE' },
+  { name: 'Intel Corporation', symbol: 'INTC' },
+  { name: 'Cisco Systems, Inc.', symbol: 'CSCO' },
+  { name: 'PepsiCo, Inc.', symbol: 'PEP' },
+  { name: 'The Coca-Cola Company', symbol: 'KO' },
+  { name: 'Merck & Co., Inc.', symbol: 'MRK' },
+  { name: 'Pfizer Inc.', symbol: 'PFE' },
+  { name: 'Verizon Communications Inc.', symbol: 'VZ' },
+  { name: 'AT&T Inc.', symbol: 'T' },
+  { name: 'Chevron Corporation', symbol: 'CVX' },
+  { name: 'Exxon Mobil Corporation', symbol: 'XOM' },
+  { name: 'Broadcom Inc.', symbol: 'AVGO' },
+  { name: 'Salesforce, Inc.', symbol: 'CRM' },
+  { name: 'AbbVie Inc.', symbol: 'ABBV' },
+  { name: 'Costco Wholesale Corporation', symbol: 'COST' },
+  { name: 'Walmart Inc.', symbol: 'WMT' },
+  { name: 'Oracle Corporation', symbol: 'ORCL' },
+  { name: 'Qualcomm Incorporated', symbol: 'QCOM' },
+  { name: 'AMD (Advanced Micro Devices)', symbol: 'AMD' },
+  { name: 'Booking Holdings Inc.', symbol: 'BKNG' },
+  { name: 'Bristol-Myers Squibb Company', symbol: 'BMY' },
+  { name: 'Lockheed Martin Corporation', symbol: 'LMT' },
+  { name: 'McDonald\'s Corporation', symbol: 'MCD' },
+  { name: 'Starbucks Corporation', symbol: 'SBUX' },
+  { name: '3M Company', symbol: 'MMM' },
+  { name: 'Ford Motor Company', symbol: 'F' },
+  { name: 'General Motors Company', symbol: 'GM' },
+  { name: 'American Express Company', symbol: 'AXP' },
+  { name: 'Goldman Sachs Group, Inc.', symbol: 'GS' },
+  { name: 'Morgan Stanley', symbol: 'MS' },
+  { name: 'Charles Schwab Corporation', symbol: 'SCHW' },
+  { name: 'Snowflake Inc.', symbol: 'SNOW' },
+  { name: 'Palantir Technologies Inc.', symbol: 'PLTR' },
+  { name: 'Rivian Automotive, Inc.', symbol: 'RIVN' },
+  { name: 'Lucid Group, Inc.', symbol: 'LCID' }
+  // Add more based on your project needs
+];
+
+        
+
+        tickerInput.addEventListener('input', () => {
+            const query = tickerInput.value.toUpperCase();
+            if (query.length < 2) {
+                suggestionsBox.style.display = 'none';
+                return;
+            }
+
+            const suggestions = companies.filter(company => company.symbol.includes(query) || company.name.toUpperCase().includes(query));
+
+            if (suggestions.length > 0) {
+                suggestionsBox.innerHTML = suggestions.map(company => `<div class="suggestion-item">${company.symbol} - ${company.name}</div>`).join('');
+                suggestionsBox.style.display = 'block';
+
+                document.querySelectorAll('.suggestion-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        tickerInput.value = item.textContent.split(' - ')[0];
+                        suggestionsBox.style.display = 'none';
+                    });
+                });
+            } else {
+                suggestionsBox.style.display = 'none';
+            }
+        });
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            resultDiv.innerHTML = '';
+            recommendationDiv.innerHTML = '';
+            showGraphButton.style.display = 'none';
+            getRecommendationButton.style.display = 'none'; // Initially hide the button
+            explanationDiv.style.display = 'none'; // Hide the explanation
+            newsDiv.style.display = 'none'; // Hide the news section
+            spinner.style.display = 'block';
+            const formData = new FormData(form);
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await response.json();
+            spinner.style.display = 'none';
+            if (data.error) {
+                resultDiv.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
+            } else {
+                latestPrice = data.todays_price;
+                predictionData = data.predictions;
+                resultDiv.innerHTML = `
+                    <h3>Today's Price: ${data.todays_price || 'N/A'}</h3>
+                    <h3>Predicted Prices:</h3>
+                    <ul>
+                        ${data.predictions.map((price, index) => `<li>Day ${index + 1}: ${price.toFixed(2)}</li>`).join('')}
+                    </ul>`;
+                showGraphButton.style.display = 'block';
+                getRecommendationButton.style.display = 'block'; // Show the button after predictions
+                newsSentiment.innerHTML = `Sentiment: ${data.news_sentiment}`;
+                newsDiv.style.display = 'block'; // Show the news section
+            }
+        });
+
+        getRecommendationButton.addEventListener('click', async () => {
+            const formData = new FormData();
+            formData.append('latest_price', latestPrice);
+            predictionData.forEach(prediction => {
+                formData.append('predictions', prediction);
+            });
+            const response = await fetch('/recommendation', {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await response.json();
+            recommendationDiv.innerHTML = `Recommendation: ${data.recommendation}`;
+            explanationDiv.style.display = 'block'; // Show the explanation after clicking recommendation
+        });
+
+        showGraphButton.addEventListener('click', () => {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: predictionData.map((_, index) => `Day ${index + 1}`),
+                    datasets: [{
+                        label: 'Predicted Prices',
+                        data: predictionData,
+                        borderColor: '#007bff',
+                        borderWidth: 2,
+                        fill: false,
+                        pointBackgroundColor: '#007bff',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#007bff',
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Days'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Price'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.parsed.y.toFixed(2);
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        }
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    }
+                }
+            });
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            background.style.background = `radial-gradient(circle at ${x * 100}% ${y * 100}%, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0))`;
+        });
+        particlesJS("particles-js", {
+        "particles": {
+            "number": {
+                "value": 80,
+                "density": {
+                    "enable": true,
+                    "value_area": 800
+                }
+            },
+            "color": {
+                "value": "#007bff"
+            },
+            "shape": {
+                "type": "circle"
+            },
+            "opacity": {
+                "value": 0.5
+            },
+            "size": {
+                "value": 4,
+                "random": true
+            },
+            "line_linked": {
+                "enable": true,
+                "distance": 150,
+                "color": "#007bff",
+                "opacity": 0.4,
+                "width": 1
+            },
+            "move": {
+                "enable": true,
+                "speed": 2,
+                "direction": "none",
+                "out_mode": "out"
+            }
+        },
+        "interactivity": {
+            "detect_on": "canvas",
+            "events": {
+                "onhover": {
+                    "enable": true,
+                    "mode": "repulse"  // change to "grab" or "bubble" if you want attraction
+                },
+                "onclick": {
+                    "enable": true,
+                    "mode": "push"
+                },
+                "resize": true
+            },
+            "modes": {
+                "repulse": {
+                    "distance": 100,
+                    "duration": 0.4
+                },
+                "push": {
+                    "particles_nb": 4
+                }
+            }
+        },
+        "retina_detect": true
+    });
+
+    </script>
+</body>
+</html>

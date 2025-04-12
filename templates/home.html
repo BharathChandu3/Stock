@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Stock Prediction App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+  
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+  
+      body {
+  font-family: 'Orbitron', sans-serif;
+  background-image: url('../static/back.gif'); /* ✅ Correct path to your image */
+  background-size: cover; /* This ensures it covers the full screen */
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: #004d40;
+  overflow: hidden;
+  position: relative;
+  perspective: 1000px;
+}
+
+  
+      .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 70px;
+        background: rgba(0, 255, 204, 0.07);
+        backdrop-filter: blur(10px);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 40px;
+        z-index: 100;
+        
+        box-shadow: 0 4px 8px rgba(0, 255, 204, 0.1);
+        background: rgba(0, 150, 136, 0.07);
+  border-bottom: 1px solid #00968833;
+  box-shadow: 0 4px 8px rgba(0, 150, 136, 0.1);
+      }
+  
+      .nav-logo {
+        font-size: 2rem;
+        font-weight: bold;
+        
+        
+        user-select: none;
+        
+        color: #009688;
+  
+      }
+  
+      .nav-links {
+        list-style: none;
+        display: flex;
+        gap: 30px;
+      }
+  
+      .nav-links li a {
+        text-decoration: none;
+        font-size: 1.2rem;
+        color: #00ffcc;
+        transition: all 0.3s ease;
+        position: relative;
+        letter-spacing: 1px;
+      }
+  
+      .nav-links li a::after {
+        content: '';
+        position: absolute;
+        width: 0%;
+        height: 2px;
+        bottom: -5px;
+        left: 0;
+        background-color: #00ffcc;
+        transition: width 0.3s ease;
+      }
+  
+      .nav-links li a:hover {
+        color: #ffffff;
+      }
+  
+      .nav-links li a:hover::after {
+        width: 100%;
+      }
+  
+      h1 {
+        font-size: 4rem;
+        text-shadow: 0 0 15px #00ffcc, 0 0 30px #00ffcc;
+        margin-bottom: 2rem;
+        z-index: 3;
+        animation: fadeInUp 2s ease forwards;
+        opacity: 0;
+      }
+  
+      button {
+        padding: 1rem 3rem;
+        font-size: 1.5rem;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        background: rgba(0, 255, 204, 0.15);
+        backdrop-filter: blur(15px);
+        color: #00ffcc;
+        box-shadow: 0 0 20px #00ffcc, inset 0 0 10px #00ffcc;
+        z-index: 3;
+        animation: fadeIn 2s ease 1.5s forwards, pulse 2s infinite;
+        opacity: 0;
+        transition: all 0.3s ease;
+      }
+  
+      button:hover {
+        background: #00ffcc;
+        color: #000;
+        box-shadow: 0 0 25px #00ffcc, inset 0 0 15px #00ffcc;
+        transform: scale(1.05);
+      }
+  
+      @keyframes fadeInUp {
+        0% { transform: translateY(30px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+      }
+  
+      @keyframes fadeIn {
+        to { opacity: 1; }
+      }
+  
+      @keyframes pulse {
+        0%, 100% { box-shadow: 0 0 20px #00ffcc, inset 0 0 10px #00ffcc; }
+        50% { box-shadow: 0 0 35px #00ffcc, inset 0 0 20px #00ffcc; }
+      }
+  
+      @keyframes glow {
+        from {
+          text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc, 0 0 30px #00ffcc;
+        }
+        to {
+          text-shadow: 0 0 15px #00ffcc, 0 0 30px #00ffcc, 0 0 45px #00ffcc;
+        }
+      }
+  
+      .cursor-glow {
+        position: fixed;
+        width: 200px;
+        height: 200px;
+        pointer-events: none;
+        background: radial-gradient(circle, #00bfa544, transparent 70%);
+        border-radius: 50%;
+        mix-blend-mode: screen;
+        z-index: 2;
+        transform: translate(-50%, -50%) scale(1);
+        animation: cursorPulse 2s infinite;
+      }
+  
+      @keyframes cursorPulse {
+        0%, 100% {
+          transform: translate(-50%, -50%) scale(1);
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.2);
+        }
+      }
+  
+      .background-animation {
+        position: absolute;
+       
+        top: 0;
+        left: 0;
+        width: 200%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+        transform-style: preserve-3d;
+        transition: transform 0.2s ease;
+      }
+  
+      .ticker {
+        position: absolute;
+        white-space: nowrap;
+        font-size: 1.5rem;
+        opacity: 0.15;
+        filter: blur(1.5px);
+        animation: scrollTicker 20s linear infinite;
+        color: #de0d0d;
+      }
+  
+      .ticker:nth-child(1) { top: 10%; animation-duration: 20s; }
+      .ticker:nth-child(2) { top: 25%; animation-duration: 25s; animation-delay: 3s; }
+      .ticker:nth-child(3) { top: 45%; animation-duration: 30s; animation-delay: 1s; }
+      .ticker:nth-child(4) { top: 65%; animation-duration: 22s; animation-delay: 4s; }
+      .ticker:nth-child(5) { top: 80%; animation-duration: 28s; animation-delay: 2s; }
+  
+      @keyframes scrollTicker {
+        0% { left: 100%; }
+        100% { left: -100%; }
+      }
+  
+      .wave {
+        position: absolute;
+        width: 300%;
+        height: 300px;
+        background: radial-gradient(circle, #00ffcc22 0%, transparent 80%);
+        animation: waveMove 10s linear infinite;
+        z-index: 0;
+      }
+  
+      @keyframes waveMove {
+        0% { transform: translateX(-50%) rotate(0deg); }
+        100% { transform: translateX(-50%) rotate(360deg); }
+      }
+  
+      .particle {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: #00ffcc;
+        border-radius: 50%;
+        opacity: 0.3;
+        animation: floatParticle 10s linear infinite;
+        z-index: 1;
+      }
+  
+      @keyframes floatParticle {
+        from {
+          transform: translateY(110vh) scale(0.5);
+          opacity: 0.2;
+        }
+        to {
+          transform: translateY(-10vh) scale(1);
+          opacity: 0.9;
+        }
+      }
+  
+      canvas#threeCanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+</head>
+<body>
+    <!-- ✅ NAVIGATION BAR -->
+<nav class="navbar" style="margin-top: 25px;">
+    <div class="nav-logo">📈 StockAI</div>
+    <ul class="nav-links">
+      <li><a href="#">Home</a></li>
+      <li><a href="{{ url_for('about') }}">About</a></li>
+      
+      <li><a href="{{ url_for('features') }}">Features</a></li>
+      <li><a href="{{ url_for('team') }}">team</a></li>
+      
+      
+    </ul>
+  </nav>
+  
+  <h1>Welcome to the Stock Price Prediction</h1>
+  <button onclick="window.location.href='/index'" >Start</button>
+
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <div class="background-animation" id="tickerBG">
+    <div class="ticker">AAPL ↑ 178.45 | GOOGL ↑ 145.30 | AMZN ↓ 132.00 | TSLA ↑ 255.60 | MSFT ↑ 320.80</div>
+    <div class="ticker">NVIDIA ↑ 725.10 | META ↓ 311.55 | IBM ↑ 145.00 | ORCL ↑ 90.12 | INTC ↓ 36.77</div>
+    <div class="ticker">NFLX ↑ 410.22 | CRM ↑ 250.33 | BABA ↓ 88.77 | WMT ↑ 152.14 | T ↑ 17.40</div>
+    <div class="ticker">UBER ↑ 55.60 | LYFT ↓ 12.44 | SNAP ↑ 14.23 | TWTR ↑ 48.22 | SHOP ↑ 62.80</div>
+    <div class="ticker">COIN ↑ 170.33 | SQ ↓ 68.22 | SPOT ↑ 157.80 | PYPL ↓ 72.11 | RBLX ↑ 42.00</div>
+  </div>
+
+  <div class="wave" style="top: 20%; left: -100%;"></div>
+  <div class="wave" style="bottom: 10%; left: -120%; animation-delay: 3s;"></div>
+
+  <!-- Floating Particles -->
+  <script>
+    for (let i = 0; i < 100; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = `${Math.random() * 100}%`;
+      particle.style.animationDelay = `${Math.random() * 10}s`;
+      particle.style.animationDuration = `${6 + Math.random() * 6}s`;
+      document.body.appendChild(particle);
+    }
+  </script>
+
+  <div class="graph-parallax" id="graphContainer">
+    <div class="graph-layer" style="z-index: 1;" data-depth="0.2">
+      <svg viewBox="0 0 1000 300"><polyline points="0,250 100,200 200,180 300,160 400,140 500,170 600,150 700,130 800,110 900,90 1000,80" /></svg>
+    </div>
+    <div class="graph-layer" style="z-index: 2;" data-depth="0.4">
+      <svg viewBox="0 0 1000 300"><polyline points="0,200 100,180 200,160 300,190 400,170 500,150 600,130 700,140 800,120 900,100 1000,90" /></svg>
+    </div>
+    <div class="graph-layer" style="z-index: 3;" data-depth="0.6">
+      <svg viewBox="0 0 1000 300"><polyline points="0,270 100,250 200,230 300,210 400,230 500,210 600,190 700,170 800,150 900,130 1000,110" /></svg>
+    </div>
+  </div>
+
+  <!-- WebGL Canvas -->
+  <canvas id="threeCanvas"></canvas>
+
+  <!-- Cursor & Parallax Control -->
+  <script>
+    const cursorGlow = document.getElementById('cursorGlow');
+    const tickerBG = document.getElementById('tickerBG');
+    const graphLayers = document.querySelectorAll('.graph-layer');
+
+    document.addEventListener('mousemove', (e) => {
+      const x = e.clientX / window.innerWidth - 0.5;
+      const y = e.clientY / window.innerHeight - 0.5;
+
+      tickerBG.style.transform = `rotateX(${y * 10}deg) rotateY(${x * -10}deg)`;
+      cursorGlow.style.left = e.clientX + 'px';
+      cursorGlow.style.top = e.clientY + 'px';
+
+      graphLayers.forEach(layer => {
+        const depth = layer.getAttribute('data-depth');
+        layer.style.transform = `translate(${x * 50 * depth}px, ${y * 50 * depth}px)`;
+      });
+    });
+
+    // WebGL / Three.js Line Chart
+    const canvas = document.getElementById('threeCanvas');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    const geometry = new THREE.BufferGeometry();
+    const points = [];
+    for (let i = 0; i <= 100; i++) {
+      points.push(i * 0.1 - 5, Math.sin(i * 0.1) * 0.8, 0);
+    }
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+
+    const material = new THREE.LineBasicMaterial({ color: 0x00ffcc });
+    const line = new THREE.Line(geometry, material);
+    scene.add(line);
+
+    camera.position.z = 5;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      line.rotation.y += 0.002;
+      line.rotation.x += 0.001;
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
