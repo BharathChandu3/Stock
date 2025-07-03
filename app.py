@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, jsonify, send_file, redirect, url_for
-import yfinance as yf
+from alpha_vantage.timeseries import TimeSeries
 import pandas as pd
 from statsmodels.tsa.arima.model import ARIMA
 from sklearn.preprocessing import MinMaxScaler
@@ -11,12 +11,16 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 from textblob import TextBlob
 import math
 import matplotlib
-matplotlib.use('Agg')  # Use the 'Agg' backend for non-GUI environments
+matplotlib.use('Agg')  
 import matplotlib.pyplot as plt
 import os
 import time
 
 app = Flask(__name__)
+
+# Alpha Vantage API key
+api_key = 'BMHC4RZNTXHUESQJ'
+
 @app.route('/about')
 def about():
     return render_template('about.html')
@@ -40,9 +44,9 @@ def calculate_intervals(predictions, error_std):
 
 def get_recommendation(latest_price, predictions):
     avg_prediction = np.mean(predictions)
-    if avg_prediction > latest_price * 1.02:  # If the average prediction is more than 2% higher than the latest price
+    if avg_prediction > latest_price * 1.02:
         return "Buy"
-    elif avg_prediction < latest_price * 0.98:  # If the average prediction is more than 2% lower than the latest price
+    elif avg_prediction < latest_price * 0.98:
         return "Sell"
     else:
         return "Hold"
@@ -52,9 +56,8 @@ def analyze_sentiment(text):
     return analysis.sentiment.polarity
 
 def fetch_news(ticker):
-    stock = yf.Ticker(ticker)
-    news = stock.news
-    return news
+    # Placeholder: Alpha Vantage does not provide news in its free API.
+    return []
 
 def analyze_news(news):
     sentiments = []
@@ -82,6 +85,23 @@ def save_graph(actual, predicted, ticker):
     plt.savefig(image_path)
     plt.close()
     return image_path
+
+def fetch_stock_data(ticker, api_key):
+    ts = TimeSeries(key=api_key, output_format='pandas')
+    try:
+        data, _ = ts.get_daily(symbol=ticker, outputsize='full')
+        data = data.rename(columns={
+            '1. open': 'Open',
+            '2. high': 'High',
+            '3. low': 'Low',
+            '4. close': 'Close',
+            '5. volume': 'Volume'
+        })
+        data = data.sort_index(ascending=True)
+        return data
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+        return pd.DataFrame()
 
 # ARIMA model training
 def arima_algo(df, prediction_window, forecast_horizon):
@@ -167,20 +187,14 @@ def home():
 def index():
     return render_template('index.html')
 
-
 @app.route('/predict', methods=['POST'])
 def predict_post():
     ticker = request.form['company']
     period = int(request.form['period'])
     model_type = request.form['model']
 
-    retries = 3
-    for attempt in range(retries):
-        df = yf.download(ticker, period='2y')
-        if not df.empty:
-            break
-        time.sleep(1)
-    else:
+    df = fetch_stock_data(ticker, api_key)
+    if df.empty:
         return jsonify({'error': 'Failed to download stock data. Please try again later.'}), 500
 
     if model_type == 'ARIMA':
@@ -188,11 +202,11 @@ def predict_post():
     elif model_type == 'LSTM+GRU':
         predictions, actual_values = lstm_gru_algo(df, period)
         latest_price = df['Close'].iloc[-1] if not df.empty else None
-        predictions = [float(p) for p in predictions]  # Convert float32 to float
+        predictions = [float(p) for p in predictions]
     elif model_type == 'Linear Regression':
         predictions, actual_values = linear_regression_algo(df, period)
         latest_price = df['Close'].iloc[-1] if not df.empty else None
-        predictions = [float(p) for p in predictions]  # Convert float32 to float
+        predictions = [float(p) for p in predictions]
     
     rmse = math.sqrt(mean_squared_error(actual_values, predictions))
     mae = mean_absolute_error(actual_values, predictions)
